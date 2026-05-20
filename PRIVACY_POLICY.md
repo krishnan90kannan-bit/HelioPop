@@ -4,7 +4,7 @@
 
 See the full formatted version: [privacy-policy.html](./privacy-policy.html)
 
-**Contact:** YOUR_EMAIL@example.com — replace before publishing.
+**Contact:** krishnan90kannan@gmail.com
 
 ---
 
@@ -22,10 +22,9 @@ See the full formatted version: [privacy-policy.html](./privacy-policy.html)
 
 ### Option A — GitHub Pages (free)
 
-1. Replace `YOUR_EMAIL@example.com` in `privacy-policy.html`.
-2. Push the `docs/` folder to GitHub.
-3. Repo **Settings** → **Pages** → Source: **Deploy from branch** → folder **`/docs`** → Save.
-4. Your URL will be like: `https://YOUR_USERNAME.github.io/YOUR_REPO/privacy-policy.html`
+1. Push the `docs/` folder to GitHub.
+2. Repo **Settings** → **Pages** → Source: **Deploy from branch** → folder **`/docs`** → Save.
+3. Your URL will be like: `https://YOUR_USERNAME.github.io/YOUR_REPO/privacy-policy.html`
 
 ### Option B — Google Sites / Notion / your website
 
