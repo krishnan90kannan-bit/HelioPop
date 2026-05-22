@@ -1,0 +1,168 @@
+================================================================================
+HELIO POP — STORE LISTING (copy-paste ready)
+================================================================================
+
+══════════════════════════════════════════════════════════════════════════════
+GOOGLE PLAY CONSOLE
+══════════════════════════════════════════════════════════════════════════════
+
+APP NAME (max 30 chars)
+HelioPop - Balloon Pop Game
+
+SHORT DESCRIPTION (max 80 chars)
+Tap colorful balloons, beat levels, play 2-player WiFi battles & special modes!
+
+FULL DESCRIPTION (max 4000 chars)
+Pop your way to fun with HelioPop — a bright, family-friendly balloon tapping game!
+
+Tap floating balloons before they drift away. Each level has a goal: pop enough balloons to win while avoiding tricky traps. Cute faces, cheerful sounds, and colorful worlds keep every round exciting.
+
+GAME MODES
+• Single Player Levels — 7 themed worlds from Easy Peasy to Galaxy Boss
+• Survival — miss 3 balloons and it is game over. How long can you last?
+• Timed Rush — score as much as you can in 60 seconds
+• 2 Player WiFi Battle — play with a friend on the same WiFi network
+
+SPECIAL BALLOONS
+• Golden balloons — bonus points
+• Bomb & devil balloons — avoid them!
+• Frozen, tiny, giant & ghost balloons — new challenges as you progress
+
+FEATURES
+• Simple one-tap controls — easy for kids and casual players
+• Unlock new levels as you improve
+• Achievements to collect
+• Fun music and pop sound effects
+• Create your player profile with a cute avatar
+
+LEVELS
+1. Easy Peasy — perfect for beginners
+2. Super Fun — faster balloons
+3. Turbo Mode — full speed ahead
+4. Night Sky — glow-in-the-dark theme
+5. Underwater — deep sea pop adventure
+6. Space Trap — alien ambush
+7. Galaxy Boss — ultimate chaos
+
+Download HelioPop today. Tap, pop, and have fun!
+
+Contact: [YOUR EMAIL]
+Privacy policy: [YOUR PRIVACY POLICY URL]
+  → Create URL from: docs/privacy-policy.html (GitHub Pages or your website)
+  → Replace YOUR_EMAIL@example.com in that file before publishing
+
+CATEGORY
+Games → Casual
+
+TAGS / KEYWORDS (use in Play Console where available)
+balloon pop, kids game, casual game, tap game, family game, offline game,
+two player game, wifi multiplayer, arcade, colorful, fun game, HelioPop
+
+CONTENT RATING
+Everyone / PEGI 3 / USK 0 (cartoon violence: popping balloons only)
+
+──────────────────────────────────────────────────────────────────────────────
+GOOGLE PLAY — FILES TO UPLOAD (in assets/store/)
+──────────────────────────────────────────────────────────────────────────────
+App icon:              google-play-icon-512.png          (512 × 512 PNG)
+Feature graphic:       google-play-feature-graphic-1024x500.png  (1024 × 500 PNG)
+Phone screenshots:     android/screenshots/01-06         (1080 × 1920 PNG)
+                       Scaled to fit (no stretch); slight top/bottom crop
+                       Upload at least 2, up to 8
+
+Optional:
+iPad 13" (iOS):        ios/screenshots-ipad-13/01-06      (2048 × 2732 PNG)
+iPad 13" alt:          ios/screenshots-ipad-13-alt/01-06  (2064 × 2752 PNG)
+Tablet 7" (Android):   1200 × 1920 (not prepared)
+Tablet 10" (Android):  1600 × 2560 (not prepared)
+Promo video:           YouTube URL (optional)
+
+══════════════════════════════════════════════════════════════════════════════
+APPLE APP STORE CONNECT
+══════════════════════════════════════════════════════════════════════════════
+
+APP NAME (max 30 chars)
+HelioPop - Balloon Pop Game
+
+SUBTITLE (max 30 chars)
+Tap, Pop & Have Fun!
+
+PROMOTIONAL TEXT (max 170 chars, optional, editable anytime)
+New update! Beat 7 themed levels, try Survival & Timed modes, and challenge a friend in 2-player WiFi battles. Tap balloons and set a new high score!
+
+DESCRIPTION (max 4000 chars)
+Pop your way to fun with HelioPop — a bright, family-friendly balloon tapping game!
+
+Tap floating balloons before they drift away. Each level has a goal: pop enough balloons to win while avoiding tricky traps. Cute faces, cheerful sounds, and colorful worlds keep every round exciting.
+
+GAME MODES
+• Single Player Levels — 7 themed worlds from Easy Peasy to Galaxy Boss
+• Survival — miss 3 balloons and it is game over
+• Timed Rush — 60-second score challenge
+• 2 Player WiFi Battle — same WiFi, real-time fun
+
+SPECIAL BALLOONS
+Golden bonuses, bombs, devils, frozen, tiny, giant, and ghost balloons add surprise as you progress.
+
+FEATURES
+• One-tap controls
+• Level unlocks & achievements
+• Music and sound effects
+• Player profile with avatar
+
+Download HelioPop. Tap, pop, and have fun!
+
+Support URL:     https://YOUR_USERNAME.github.io/YOUR_REPO/support.html
+                 (file: docs/support.html — host with GitHub Pages /docs)
+Privacy Policy:  https://YOUR_USERNAME.github.io/YOUR_REPO/privacy-policy.html
+  → Use: docs/privacy-policy.html hosted online (see docs/PRIVACY_POLICY.md)
+Marketing URL:   [OPTIONAL]
+
+KEYWORDS (max 100 chars, comma-separated, no spaces after commas)
+balloon,pop,kids,casual,tap,arcade,family,fun,offline,multiplayer,wifi,game
+
+PRIMARY CATEGORY
+Games
+
+SECONDARY CATEGORY
+Casual (or Family)
+
+AGE RATING
+4+ (no realistic violence; cartoon/fantasy)
+
+──────────────────────────────────────────────────────────────────────────────
+APP STORE — FILES TO UPLOAD (in assets/store/)
+──────────────────────────────────────────────────────────────────────────────
+App icon:              apple-app-store-icon-1024.png     (1024 × 1024 PNG)
+iPhone 6.7" screens:   ios/screenshots-6.7/01-06         (1284 × 2778 PNG — App Store accepted)
+iPhone 6.5" alt:       ios/screenshots-6.5-1242/01-06    (1242 × 2688 PNG — App Store accepted)
+                       Upload at least 1 set, up to 10
+
+Optional screenshot sizes:
+iPhone 6.5":           1284 × 2778  → ios/screenshots-6.5-1242 (1242 × 2688)
+iPad 13":              2048 × 2732  → ios/screenshots-ipad-13
+iPad 13" alt:          2064 × 2752  → ios/screenshots-ipad-13-alt
+
+App Preview video:     optional
+
+══════════════════════════════════════════════════════════════════════════════
+SCREENSHOT ORDER (recommended for both stores)
+══════════════════════════════════════════════════════════════════════════════
+01 — Splash / loading (brand + "Tap, Pop & Have Fun")
+02 — Home menu (levels + modes)
+03 — Gameplay (active level)
+04 — Countdown ("Get Ready")
+05 — Level complete / progress
+06 — Results screen
+
+IMPORTANT: Retake screenshots AFTER the dashed-border fix so no yellow
+error bar appears at the bottom. Upscaling improves size only, not quality.
+
+══════════════════════════════════════════════════════════════════════════════
+BUILT-IN APP ICONS (already in project — for the installed app, not store upload)
+══════════════════════════════════════════════════════════════════════════════
+Android mipmaps:  android/app/src/main/res/mipmap-*/ic_launcher.png
+iOS AppIcon:      ios/.../AppIcon.appiconset/
+Master source:    assets/icon-1024.png
+
+Store listing icons are separate from in-app icons.

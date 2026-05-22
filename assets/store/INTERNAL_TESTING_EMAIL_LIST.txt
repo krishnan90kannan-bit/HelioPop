@@ -1,0 +1,38 @@
+================================================================================
+HELIO POP — INTERNAL TESTING EMAIL LIST (Google Play)
+================================================================================
+
+Use this file to track testers, then add them in Play Console.
+
+Play Console path:
+  Testing → Internal testing → Testers → Create email list
+
+Requirements:
+  • Each tester needs a Google account (Gmail or Google Workspace email).
+  • Add one email per line below (no spaces around @).
+  • You can have up to 100 testers on internal testing.
+
+--------------------------------------------------------------------------------
+LIST NAME (in Play Console): HelioPop Internal Testers
+--------------------------------------------------------------------------------
+
+# Add your testers below (replace examples, delete the # comment lines before upload)
+
+your.email@gmail.com
+friend.tester@gmail.com
+family.member@gmail.com
+
+--------------------------------------------------------------------------------
+OPTIONAL — Copy/paste block for Play Console (comma-separated)
+--------------------------------------------------------------------------------
+your.email@gmail.com, friend.tester@gmail.com, family.member@gmail.com
+
+--------------------------------------------------------------------------------
+NOTES
+--------------------------------------------------------------------------------
+• After saving the list, assign it to the Internal testing track.
+• Testers get an opt-in link from Play Console (Share link / Copy link).
+• They must accept the invite before they can install from Play Store.
+• Do not commit real personal emails to public git if the repo is public.
+
+================================================================================

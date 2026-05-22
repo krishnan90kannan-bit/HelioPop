@@ -24,7 +24,9 @@ See the full formatted version: [privacy-policy.html](./privacy-policy.html)
 
 1. Push the `docs/` folder to GitHub.
 2. Repo **Settings** → **Pages** → Source: **Deploy from branch** → folder **`/docs`** → Save.
-3. Your URL will be like: `https://YOUR_USERNAME.github.io/YOUR_REPO/privacy-policy.html`
+3. Your URLs will be like:
+   - Privacy: `https://YOUR_USERNAME.github.io/YOUR_REPO/privacy-policy.html`
+   - Support: `https://YOUR_USERNAME.github.io/YOUR_REPO/support.html`
 
 ### Option B — Google Sites / Notion / your website
 

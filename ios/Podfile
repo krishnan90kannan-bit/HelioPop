@@ -1,0 +1,53 @@
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'GameApplication' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  target 'GameApplicationTests' do
+    inherit! :complete
+  end
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false
+    )
+
+    # Xcode 16+/26+ Apple Clang: fmt 11.0.2 consteval breaks format-inl.h (RN #55601).
+    # Patch Pods/fmt to disable FMT_USE_CONSTEVAL until RN bumps fmt to 12.1.0+.
+    fmt_base = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      content = File.read(fmt_base)
+      unless content.include?('HelioPop: disable FMT_USE_CONSTEVAL')
+        patched = content.gsub(
+          /#elif defined\(__cpp_consteval\)\n#  define FMT_USE_CONSTEVAL 1/,
+          "#elif defined(__cpp_consteval)\n#  define FMT_USE_CONSTEVAL 0  // HelioPop: disable FMT_USE_CONSTEVAL (Xcode consteval fix)"
+        )
+        if patched != content
+          File.chmod(0644, fmt_base)
+          File.write(fmt_base, patched)
+          Pod::UI.puts 'Patched fmt/base.h (FMT_USE_CONSTEVAL=0) for Xcode compatibility'.green
+        end
+      end
+    end
+  end
+end
