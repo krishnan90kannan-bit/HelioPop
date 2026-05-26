@@ -3,22 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HelioPop Support</title>
+  <meta name="description" content="HelioPop support page with contact information, help topics, troubleshooting, and privacy information." />
+  <title>HelioPop App Support</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.6;
-      max-width: 720px;
+      max-width: 820px;
       margin: 0 auto;
       padding: 24px 20px 48px;
       color: #1a1a2e;
       background: #f8f7ff;
     }
-    h1 { color: #6c5ce7; font-size: 1.75rem; }
-    h2 { color: #5a4bd1; font-size: 1.15rem; margin-top: 1.5rem; }
+    h1 { color: #6c5ce7; font-size: 2rem; margin-bottom: 0.25rem; }
+    h2 { color: #5a4bd1; font-size: 1.2rem; margin-top: 1.75rem; }
+    h3 { color: #4a3db8; font-size: 1rem; margin-top: 1rem; }
     a { color: #6c5ce7; }
     ul { padding-left: 1.25rem; }
     .nav { margin-bottom: 1.5rem; font-size: 0.95rem; }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e0ff;
+      border-radius: 16px;
+      padding: 18px;
+      margin: 18px 0;
+      box-shadow: 0 4px 12px rgba(108, 92, 231, 0.08);
+    }
+    .button {
+      display: inline-block;
+      background: #6c5ce7;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .muted { color: #666; }
+    code {
+      background: #f0edff;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
@@ -28,37 +54,79 @@
     <a href="privacy-policy.html">Privacy Policy</a>
   </p>
 
-  <h1>HelioPop Support</h1>
-  <p>Need help with <strong>HelioPop</strong> on iOS or Android? Contact us below.</p>
+  <h1>HelioPop App Support</h1>
+  <p class="muted">Support for HelioPop, a casual balloon popping game for iPhone, iPad, and Android.</p>
 
-  <h2>Contact</h2>
-  <p>
-    Email:
-    <a href="mailto:krishnan90kannan@gmail.com">krishnan90kannan@gmail.com</a>
-  </p>
-  <p>We aim to reply within a few business days.</p>
+  <div class="card">
+    <h2>Contact Support</h2>
+    <p>
+      If you have a question, need help, or want to report a problem, please email:
+      <br />
+      <a href="mailto:krishnan90kannan@gmail.com"><strong>krishnan90kannan@gmail.com</strong></a>
+    </p>
+    <p>
+      <a class="button" href="mailto:krishnan90kannan@gmail.com?subject=HelioPop%20Support%20Request">
+        Email HelioPop Support
+      </a>
+    </p>
+    <p>We aim to reply within 2-3 business days.</p>
+  </div>
 
-  <h2>Common questions</h2>
+  <h2>What to include in your support request</h2>
   <ul>
-    <li><strong>Ads not loading?</strong> Check your internet connection and try again later.</li>
-    <li><strong>2-player Wi‑Fi mode?</strong> Both devices must be on the same Wi‑Fi network.</li>
-    <li><strong>Progress lost?</strong> Game data is stored on your device. Reinstalling may reset progress.</li>
+    <li>Your device model, for example iPhone 15, iPad, or Android device.</li>
+    <li>Your operating system version, for example iOS 17 or Android 15.</li>
+    <li>The HelioPop app version, if available.</li>
+    <li>A short description of the issue and the steps that caused it.</li>
+    <li>A screenshot or screen recording, if it helps explain the problem.</li>
   </ul>
 
-  <h2>Privacy Policy</h2>
+  <h2>Common help topics</h2>
+
+  <h3>Sound or music is not playing</h3>
+  <ul>
+    <li>Check that your device volume is turned up.</li>
+    <li>Check the app settings for music and sound effects.</li>
+    <li>Close and reopen the app if audio does not start after changing settings.</li>
+  </ul>
+
+  <h3>Ads are not loading</h3>
+  <ul>
+    <li>Check your internet connection.</li>
+    <li>Ads may not be available every time. Please try again later.</li>
+  </ul>
+
+  <h3>2-player Wi-Fi mode</h3>
+  <ul>
+    <li>Both devices must be connected to the same Wi-Fi network.</li>
+    <li>On iOS, allow local network permission if prompted.</li>
+    <li>Make sure both players are using the same app version when possible.</li>
+  </ul>
+
+  <h3>Progress, scores, and achievements</h3>
+  <ul>
+    <li>Game progress is stored locally on your device.</li>
+    <li>Deleting the app or clearing app data may reset progress.</li>
+  </ul>
+
+  <h2>Privacy</h2>
   <p>
-    Read how we handle your data, ads (Google AdMob), and local multiplayer:
+    Read the HelioPop Privacy Policy:
+    <a href="privacy-policy.html">privacy-policy.html</a>
   </p>
   <p>
-    <a href="privacy-policy.html"><strong>HelioPop Privacy Policy</strong></a>
-  </p>
-  <p>
-    Direct link:
-    <a href="https://github.com/krishnan90kannan-bit/HelioPop/blob/main/privacy-policy.html">
-      https://github.com/krishnan90kannan-bit/HelioPop/blob/main/privacy-policy.html
+    Direct URL:
+    <a href="https://krishnan90kannan-bit.github.io/HelioPop/privacy-policy.html">
+      https://krishnan90kannan-bit.github.io/HelioPop/privacy-policy.html
     </a>
   </p>
 
-  <p><small>© 2026 HelioPop</small></p>
+  <h2>Developer Information</h2>
+  <p>
+    App: <strong>HelioPop</strong><br />
+    Support email: <a href="mailto:krishnan90kannan@gmail.com">krishnan90kannan@gmail.com</a>
+  </p>
+
+  <p><small>© 2026 HelioPop. Last updated: May 26, 2026.</small></p>
 </body>
 </html>
