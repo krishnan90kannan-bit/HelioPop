@@ -97,6 +97,7 @@ In `android/app/build.gradle`, increase:
 | Gradle sync failed | Set SDK path: Android Studio → SDK Manager; ensure API 35 installed |
 | `keystore.properties` not found | Copy `keystore.properties.example` → `keystore.properties` and fill in |
 | Metro / JS bundle missing in release | From project root run `npm start` once, or let Gradle bundle JS during `bundleRelease` |
+| **`createBundleReleaseJsAndAssets` — cannot start `node`** | Android Studio does not see Homebrew `node`. The project auto-detects common paths; or add to `android/local.properties`: `node.binary=/opt/homebrew/opt/node@22/bin/node` (run `which node` in Terminal). Or set env `NODE_BINARY` before building. |
 | Wrong package on Play | Package `com.gameapplication` is fixed after first upload |
 
 ---

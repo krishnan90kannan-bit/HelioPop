@@ -8,8 +8,38 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Android Studio / Gradle often cannot find `node` on PATH (common with Homebrew).
+def resolveNodeBinary() {
+    def fromEnv = System.getenv("NODE_BINARY")
+    if (fromEnv != null && !fromEnv.trim().isEmpty()) {
+        return fromEnv.trim()
+    }
+    def localProps = new Properties()
+    def localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) {
+        localProps.load(new FileInputStream(localPropsFile))
+        def fromLocal = localProps.getProperty("node.binary")
+        if (fromLocal != null && !fromLocal.trim().isEmpty()) {
+            return fromLocal.trim()
+        }
+    }
+    def candidates = [
+            "/opt/homebrew/bin/node",
+            "/opt/homebrew/opt/node@22/bin/node",
+            "/opt/homebrew/opt/node@20/bin/node",
+            "/usr/local/bin/node",
+    ]
+    for (path in candidates) {
+        if (new File(path).exists()) {
+            return path
+        }
+    }
+    return "node"
+}
+
 react {
     autolinkLibrariesWithApp()
+    nodeExecutableAndArgs = [resolveNodeBinary()]
 }
 
 def enableProguardInReleaseBuilds = false
@@ -26,7 +56,7 @@ android {
         applicationId "com.gameapplication"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
+        versionCode 5
         versionName "1.0.0"
     }
 
@@ -55,6 +85,9 @@ android {
             signingConfig keystorePropertiesFile.exists()
                 ? signingConfigs.release
                 : signingConfigs.debug
+            ndk {
+                abiFilters "arm64-v8a"
+            }
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

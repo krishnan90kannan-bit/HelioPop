@@ -16,10 +16,84 @@ let fadeTimer: ReturnType<typeof setInterval> | null = null;
 
 /** Call once at app start — required for reliable iOS playback. */
 export function initAudioSession() {
-  Sound.setCategory('Playback');
+  Sound.setCategory('Playback', true);
   if (Platform.OS === 'ios') {
     Sound.setActive(true);
   }
+}
+
+/** Keep the session active for one-shot SFX after background music is stopped (play screen). */
+export function ensureSfxAudioSession() {
+  Sound.setCategory('Playback', true);
+  if (Platform.OS === 'ios') {
+    Sound.setActive(true);
+  }
+}
+
+const sfxFileName = (name: string) => (name.endsWith('.wav') ? name : `${name}.wav`);
+
+/**
+ * Load a short wav from the app bundle (pop / cheer / tick).
+ * react-native-sound on Android strips the extension when basePath is empty.
+ */
+export function loadBundledSfx(
+  fileName: string,
+  onReady?: (sound: Sound) => void,
+  onError?: (message: string) => void,
+): Sound {
+  const sound = new Sound(sfxFileName(fileName), Sound.MAIN_BUNDLE, (error) => {
+    if (error) {
+      onError?.(String(error));
+      return;
+    }
+    onReady?.(sound);
+  });
+  return sound;
+}
+
+export function loadBundledMusic(
+  fileName: string,
+  volume: number,
+  onReady?: (sound: Sound) => void,
+): Sound {
+  const sound = new Sound(sfxFileName(fileName), Sound.MAIN_BUNDLE, (error) => {
+    if (error) {
+      console.log('Music load error for ' + fileName, error);
+      return;
+    }
+    sound.setNumberOfLoops(-1);
+    sound.setVolume(volume);
+    onReady?.(sound);
+  });
+  return sound;
+}
+
+/** Play balloon pop / countdown tick / GO cheer. */
+export function playSoundEffect(sound: Sound | null | undefined, volume = 1, attempt = 0) {
+  if (!sound || attempt > 12) {
+    return;
+  }
+  ensureSfxAudioSession();
+  if (!sound.isLoaded()) {
+    setTimeout(() => playSoundEffect(sound, volume, attempt + 1), 100);
+    return;
+  }
+  sound.setVolume(volume);
+  if (Platform.OS === 'android') {
+    sound.reset();
+    sound.play();
+    return;
+  }
+  let didPlay = false;
+  const playOnce = () => {
+    if (didPlay) {
+      return;
+    }
+    didPlay = true;
+    sound.play();
+  };
+  sound.stop(() => playOnce());
+  setTimeout(playOnce, 50);
 }
 
 export function cancelMusicFade() {
