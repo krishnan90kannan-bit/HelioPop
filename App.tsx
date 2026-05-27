@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   Animated,
   Dimensions,
   StatusBar,
@@ -32,7 +33,11 @@ import {
   FADE_OUT_MS,
   fadeSoundVolume,
   initAudioSession,
+  ensureSfxAudioSession,
+  loadBundledMusic,
+  loadBundledSfx,
   MUSIC_VOLUME,
+  playSoundEffect,
   startLoopingTrack,
 } from './audio';
 
@@ -54,6 +59,8 @@ const CONFETTI_COLORS = [
 const BALLOON_WIDTH = 70;
 const BALLOON_HEIGHT = 78;
 const CONFETTI_COUNT = 16;
+const CONFETTI_LIFETIME_MS = Platform.OS === 'ios' ? 800 : 1000;
+const BALLOON_HIT_SLOP = {top: 18, bottom: 18, left: 18, right: 18};
 
 type BalloonSpecialType =
   | 'normal'
@@ -384,7 +391,7 @@ const MENU_MUSIC_SCREENS: Screen[] = [
 
 const APP_VERSION = '1.0.0';
 
-const SPLASH_DURATION_MS = 5000;
+const SPLASH_DURATION_MS = 2500;
 const GAME_END_DELAY_MS = 650;
 const SPLASH_BALLOON_DEFS = [
   {color: '#FF6B6B', face: '😄', size: 1, x: 0.12},
@@ -741,6 +748,7 @@ const App = () => {
 
   const balloonIdRef = useRef(0);
   const confettiIdRef = useRef(0);
+  const confettiTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const popupIdRef = useRef(0);
   const speedRef = useRef(4000);
   const spawnedCountRef = useRef(0);
@@ -773,41 +781,32 @@ const App = () => {
 
   useEffect(() => {
     initAudioSession();
-    const loadEffect = (name: string) =>
-      new Sound(name, Sound.MAIN_BUNDLE, (err) => {
-        if (err) {
-          console.log('Sound load error for ' + name, err);
-        }
-      });
     popSounds.current = [
-      loadEffect('pop1.wav'),
-      loadEffect('pop2.wav'),
-      loadEffect('pop3.wav'),
+      loadBundledSfx('pop1.wav'),
+      loadBundledSfx('pop2.wav'),
+      loadBundledSfx('pop3.wav'),
     ];
     cheerSounds.current = [
-      loadEffect('cheer1.wav'),
-      loadEffect('cheer2.wav'),
-      loadEffect('cheer3.wav'),
-      loadEffect('cheer4.wav'),
+      loadBundledSfx('cheer1.wav'),
+      loadBundledSfx('cheer2.wav'),
+      loadBundledSfx('cheer3.wav'),
+      loadBundledSfx('cheer4.wav'),
     ];
-    const loadLoopingTrack = (
-      name: string,
-      ref: React.MutableRefObject<Sound | null>,
-      volume: number,
-    ) => {
-      const s = new Sound(name, Sound.MAIN_BUNDLE, (err) => {
-        if (err) {
-          console.log('Music load error for ' + name, err);
-          return;
-        }
-        ref.current = s;
-        s.setNumberOfLoops(-1);
-        s.setVolume(volume);
-        setMenuMusicReady(count => count + 1);
-      });
-    };
-    loadLoopingTrack('theme_music.wav', splashMusicRef, MUSIC_VOLUME.splash);
-    loadLoopingTrack('home_music.wav', homeMusicRef, MUSIC_VOLUME.home);
+    loadBundledMusic('theme_music.wav', MUSIC_VOLUME.splash, s => {
+      splashMusicRef.current = s;
+      if (musicOnRef.current) {
+        startLoopingTrack(s, 0);
+        activeMusicTrackRef.current = 'splash';
+        fadeSoundVolume(s, 0, MUSIC_VOLUME.splash, FADE_IN_MS, () => {
+          splashVolumeRef.current = MUSIC_VOLUME.splash;
+        });
+      }
+      setMenuMusicReady(count => count + 1);
+    });
+    loadBundledMusic('home_music.wav', MUSIC_VOLUME.home, s => {
+      homeMusicRef.current = s;
+      setMenuMusicReady(count => count + 1);
+    });
     return () => {
       cancelMusicFade();
       popSounds.current.forEach(s => s.release());
@@ -835,6 +834,10 @@ const App = () => {
   useEffect(() => {
     musicOnRef.current = musicOn;
   }, [musicOn]);
+
+  useEffect(() => {
+    soundOnRef.current = soundOn;
+  }, [soundOn]);
 
   const fadeOutAllMusic = useCallback((onDone?: () => void) => {
     cancelMusicFade();
@@ -943,29 +946,23 @@ const App = () => {
     });
   }, []);
 
-  const playGameplayMusic = useCallback(() => {
-    const home = homeMusicRef.current;
-    if (!musicOnRef.current || !home?.isLoaded()) {
-      return;
-    }
-    if (activeMusicTrackRef.current === 'game' && homeVolumeRef.current >= MUSIC_VOLUME.gameplay - 0.05) {
-      return;
-    }
+  const stopMusicForGameplay = useCallback(() => {
+    cancelMusicFade();
     splashMusicRef.current?.stop();
     splashVolumeRef.current = 0;
-    const fromVol = homeVolumeRef.current;
-    if (activeMusicTrackRef.current === 'home' || activeMusicTrackRef.current === 'game') {
-      activeMusicTrackRef.current = 'game';
-      fadeSoundVolume(home, fromVol, MUSIC_VOLUME.gameplay, FADE_IN_MS, () => {
-        homeVolumeRef.current = MUSIC_VOLUME.gameplay;
-      });
+    const home = homeMusicRef.current;
+    if (!home?.isLoaded()) {
+      activeMusicTrackRef.current = null;
+      homeVolumeRef.current = 0;
       return;
     }
-    startLoopingTrack(home, 0);
-    homeVolumeRef.current = 0;
-    activeMusicTrackRef.current = 'game';
-    fadeSoundVolume(home, 0, MUSIC_VOLUME.gameplay, FADE_IN_MS, () => {
-      homeVolumeRef.current = MUSIC_VOLUME.gameplay;
+    fadeSoundVolume(home, homeVolumeRef.current, 0, FADE_OUT_MS, () => {
+      home.pause();
+      homeVolumeRef.current = 0;
+      if (activeMusicTrackRef.current === 'home' || activeMusicTrackRef.current === 'game') {
+        activeMusicTrackRef.current = null;
+      }
+      ensureSfxAudioSession();
     });
   }, []);
 
@@ -977,15 +974,16 @@ const App = () => {
       }
       if (target === 'splash') {
         playSplashMusic();
+      } else if (target === 'game') {
+        // Play screen: balloon pop SFX only, no background music
+        stopMusicForGameplay();
       } else if (MENU_MUSIC_SCREENS.includes(target)) {
         playHomeMusic();
-      } else if (target === 'game') {
-        playGameplayMusic();
       } else {
         fadeOutAllMusic();
       }
     },
-    [fadeOutAllMusic, playSplashMusic, playHomeMusic, playGameplayMusic],
+    [fadeOutAllMusic, playSplashMusic, playHomeMusic, stopMusicForGameplay],
   );
 
   const screenRef = useRef(screen);
@@ -1010,20 +1008,20 @@ const App = () => {
     return () => sub.remove();
   }, [pauseActiveMenuMusic, playMusicForScreen]);
 
+  const stopAllSoundEffects = useCallback(() => {
+    popSounds.current.forEach(s => {
+      if (s?.isLoaded()) s.stop();
+    });
+    cheerSounds.current.forEach(s => {
+      if (s?.isLoaded()) s.stop();
+    });
+  }, []);
+
   const playPopSound = useCallback(() => {
-    if (!soundOn) {
-      return;
-    }
     const idx = soundIndex.current % popSounds.current.length;
     soundIndex.current++;
-    const sound = popSounds.current[idx];
-    if (sound?.isLoaded()) {
-      sound.setVolume(0.9);
-      sound.stop(() => {
-        sound.play();
-      });
-    }
-  }, [soundOn]);
+    playSoundEffect(popSounds.current[idx], 0.9);
+  }, []);
 
   const sendToOpponent = useCallback((data: object) => {
     try {
@@ -1217,6 +1215,7 @@ const App = () => {
   const countdownOpacity = useRef(new Animated.Value(0)).current;
   const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musicOnRef = useRef(true);
+  const soundOnRef = useRef(true);
   const splashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const splashLogoScale = useRef(new Animated.Value(0.6)).current;
   const splashLogoOpacity = useRef(new Animated.Value(0)).current;
@@ -1273,10 +1272,24 @@ const App = () => {
         const sett = await AsyncStorage.getItem(SETTINGS_KEY);
         if (sett) {
           const s = JSON.parse(sett);
-          if (s.soundOn !== undefined) setSoundOn(s.soundOn);
-          if (s.musicOn !== undefined) setMusicOn(s.musicOn);
-          if (s.vibrationOn !== undefined) setVibrationOn(s.vibrationOn);
+          const loadedSoundOn = s.soundOn ?? true;
+          const loadedMusicOn = s.musicOn ?? true;
+          soundOnRef.current = loadedSoundOn;
+          musicOnRef.current = loadedMusicOn;
+          setSoundOn(loadedSoundOn);
+          setMusicOn(loadedMusicOn);
+          setVibrationOn(s.vibrationOn ?? true);
           if (s.splashThemeId && SPLASH_THEMES[s.splashThemeId]) setSplashThemeId(s.splashThemeId);
+        } else {
+          const defaults = {
+            soundOn: true,
+            musicOn: true,
+            vibrationOn: true,
+            splashThemeId: DEFAULT_SPLASH_THEME_ID,
+          };
+          soundOnRef.current = true;
+          musicOnRef.current = true;
+          await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(defaults));
         }
       } catch (e) {}
       try {
@@ -1386,6 +1399,8 @@ const App = () => {
     progressAnim.start();
     floatLoops.forEach(loop => loop.start());
 
+    playSplashMusic();
+
     splashTimerRef.current = setTimeout(() => {
       setScreen('home');
     }, SPLASH_DURATION_MS);
@@ -1403,7 +1418,7 @@ const App = () => {
       floatLoops.forEach(loop => loop.stop());
       splashBalloonAnims.forEach(b => b.wobble.stopAnimation());
     };
-  }, [screen, splashLogoScale, splashLogoOpacity, splashCardScale, splashSunRotate, splashSunPulse, splashTitlePulse, splashProgress, splashStarTwinkle, splashBalloonAnims]);
+  }, [screen, splashLogoScale, splashLogoOpacity, splashCardScale, splashSunRotate, splashSunPulse, splashTitlePulse, splashProgress, splashStarTwinkle, splashBalloonAnims, playSplashMusic]);
 
   const saveProgress = useCallback(async (unlockedIds: number[]) => {
     try {
@@ -1712,62 +1727,23 @@ const App = () => {
     ]).start();
   }, [scoreShake]);
 
-  const celebrateAndShowResult = useCallback((screenName: 'result' | 'multi_result' = 'result') => {
-    setScreen(screenName);
-    showModal();
-
-    const cx = SCREEN_WIDTH / 2;
-    const cy = SCREEN_HEIGHT / 2;
-    spawnConfetti(cx, cy - 100);
-    setTimeout(() => spawnConfetti(cx - 80, cy), 80);
-    setTimeout(() => spawnConfetti(cx + 80, cy), 160);
-    if (soundOn) {
-      const s = cheerSounds.current[cheerIndex.current % cheerSounds.current.length];
-      if (s?.isLoaded()) { s.stop(() => { s.play(); }); }
-      cheerIndex.current++;
+  const removeConfettiBurst = useCallback((burstId: string, pieces?: ConfettiPiece[]) => {
+    const timeout = confettiTimeoutsRef.current.get(burstId);
+    if (timeout) {
+      clearTimeout(timeout);
+      confettiTimeoutsRef.current.delete(burstId);
     }
-  }, [spawnConfetti, showModal, soundOn]);
-
-  const triggerGameEnd = useCallback((screenName: 'result' | 'multi_result' = 'result') => {
-    if (gameEndTriggeredRef.current) return;
-    gameEndTriggeredRef.current = true;
-    gameRunningRef.current = false;
-    setGameRunning(false);
-    if (spawnIntervalRef.current) {
-      clearInterval(spawnIntervalRef.current);
-      spawnIntervalRef.current = null;
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (gameEndTimerRef.current) clearTimeout(gameEndTimerRef.current);
-    gameEndTimerRef.current = setTimeout(() => {
-      gameEndTimerRef.current = null;
-      adGateOpenRef.current = true;
-      preloadRewardedAd();
-      celebrateAndShowResult(screenName);
-    }, GAME_END_DELAY_MS);
-  }, [celebrateAndShowResult]);
-
-  const spawnScorePopup = useCallback((x: number, y: number, text = '+1', color = '#FFD93D') => {
-    const id = popupIdRef.current++;
-    const opacity = new Animated.Value(1);
-    const translateY = new Animated.Value(0);
-    const scale = new Animated.Value(0.5);
-
-    setScorePopups(prev => [...prev, {id, x, y, opacity, translateY, scale, text, color}]);
-
-    Animated.parallel([
-      Animated.timing(translateY, {toValue: -60, duration: 600, useNativeDriver: true}),
-      Animated.timing(scale, {toValue: 1.2, duration: 200, useNativeDriver: true}),
-      Animated.sequence([
-        Animated.delay(300),
-        Animated.timing(opacity, {toValue: 0, duration: 300, useNativeDriver: true}),
-      ]),
-    ]).start(() => {
-      setScorePopups(prev => prev.filter(p => p.id !== id));
+    pieces?.forEach(p => {
+      p.translateX.stopAnimation();
+      p.translateY.stopAnimation();
+      p.opacity.stopAnimation();
+      p.rotate.stopAnimation();
+      p.scale.stopAnimation();
+      if (Platform.OS === 'ios') {
+        p.opacity.setValue(0);
+      }
     });
+    setConfettiBursts(prev => prev.filter(b => b.id !== burstId));
   }, []);
 
   const spawnConfetti = useCallback((originX: number, originY: number) => {
@@ -1815,10 +1791,90 @@ const App = () => {
       ]).start();
     }
 
-    setConfettiBursts(prev => [...prev, {id: burstId, pieces}]);
-    setTimeout(() => {
-      setConfettiBursts(prev => prev.filter(b => b.id !== burstId));
-    }, 1000);
+    setConfettiBursts(prev => {
+      const next = [...prev, {id: burstId, pieces}];
+      if (Platform.OS !== 'ios' || next.length <= 3) {
+        return next;
+      }
+      const dropped = next.slice(0, next.length - 3);
+      dropped.forEach(burst => {
+        const timeout = confettiTimeoutsRef.current.get(burst.id);
+        if (timeout) {
+          clearTimeout(timeout);
+          confettiTimeoutsRef.current.delete(burst.id);
+        }
+        burst.pieces.forEach(p => {
+          p.translateX.stopAnimation();
+          p.translateY.stopAnimation();
+          p.opacity.stopAnimation();
+          p.rotate.stopAnimation();
+          p.scale.stopAnimation();
+          p.opacity.setValue(0);
+        });
+      });
+      return next.slice(-3);
+    });
+    confettiTimeoutsRef.current.set(
+      burstId,
+      setTimeout(() => removeConfettiBurst(burstId, pieces), CONFETTI_LIFETIME_MS),
+    );
+  }, [removeConfettiBurst]);
+
+  const celebrateAndShowResult = useCallback((screenName: 'result' | 'multi_result' = 'result') => {
+    setScreen(screenName);
+    showModal();
+
+    const cx = SCREEN_WIDTH / 2;
+    const cy = SCREEN_HEIGHT / 2;
+    spawnConfetti(cx, cy - 100);
+    setTimeout(() => spawnConfetti(cx - 80, cy), 80);
+    setTimeout(() => spawnConfetti(cx + 80, cy), 160);
+    if (soundOnRef.current) {
+      playSoundEffect(cheerSounds.current[cheerIndex.current % cheerSounds.current.length], 1);
+      cheerIndex.current++;
+    }
+  }, [spawnConfetti, showModal]);
+
+  const triggerGameEnd = useCallback((screenName: 'result' | 'multi_result' = 'result') => {
+    if (gameEndTriggeredRef.current) return;
+    gameEndTriggeredRef.current = true;
+    gameRunningRef.current = false;
+    setGameRunning(false);
+    if (spawnIntervalRef.current) {
+      clearInterval(spawnIntervalRef.current);
+      spawnIntervalRef.current = null;
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (gameEndTimerRef.current) clearTimeout(gameEndTimerRef.current);
+    gameEndTimerRef.current = setTimeout(() => {
+      gameEndTimerRef.current = null;
+      adGateOpenRef.current = true;
+      preloadRewardedAd();
+      celebrateAndShowResult(screenName);
+    }, GAME_END_DELAY_MS);
+  }, [celebrateAndShowResult]);
+
+  const spawnScorePopup = useCallback((x: number, y: number, text = '+1', color = '#FFD93D') => {
+    const id = popupIdRef.current++;
+    const opacity = new Animated.Value(1);
+    const translateY = new Animated.Value(0);
+    const scale = new Animated.Value(0.5);
+
+    setScorePopups(prev => [...prev, {id, x, y, opacity, translateY, scale, text, color}]);
+
+    Animated.parallel([
+      Animated.timing(translateY, {toValue: -60, duration: 600, useNativeDriver: true}),
+      Animated.timing(scale, {toValue: 1.2, duration: 200, useNativeDriver: true}),
+      Animated.sequence([
+        Animated.delay(300),
+        Animated.timing(opacity, {toValue: 0, duration: 300, useNativeDriver: true}),
+      ]),
+    ]).start(() => {
+      setScorePopups(prev => prev.filter(p => p.id !== id));
+    });
   }, []);
 
   const spawnBalloon = useCallback(() => {
@@ -1874,7 +1930,6 @@ const App = () => {
     } else if (roll < (cursor += rates.giant)) {
       specialType = 'giant';
       sizeMultiplier = 1.35;
-      tapsLeft = 2;
       face = '💪';
     }
 
@@ -2006,18 +2061,15 @@ const App = () => {
   }, [spawnBalloon, isMultiplayer, sendToOpponent, triggerGameEnd]);
 
   const playCountdownTick = useCallback(() => {
-    if (!soundOn) return;
-    const s = popSounds.current[soundIndex.current % popSounds.current.length];
-    if (s?.isLoaded()) { s.setVolume(1.0); s.stop(() => { s.play(); }); }
+    const tick = soundIndex.current % popSounds.current.length;
     soundIndex.current++;
-  }, [soundOn]);
+    playSoundEffect(popSounds.current[tick], 1);
+  }, []);
 
   const playCountdownGo = useCallback(() => {
-    if (!soundOn) return;
-    const s = cheerSounds.current[cheerIndex.current % cheerSounds.current.length];
-    if (s?.isLoaded()) { s.setVolume(1.0); s.stop(() => { s.play(); }); }
+    playSoundEffect(cheerSounds.current[cheerIndex.current % cheerSounds.current.length], 1);
     cheerIndex.current++;
-  }, [soundOn]);
+  }, []);
 
   const clearCountdownTimer = useCallback(() => {
     if (countdownTimerRef.current) {
@@ -2093,6 +2145,7 @@ const App = () => {
   const runGameCountdown = useCallback((onComplete: () => void, withSound = true) => {
     clearCountdownTimer();
     setShowCountdown(true);
+    ensureSfxAudioSession();
     const steps = [3, 2, 1, 0];
     let stepIdx = 0;
 
@@ -2129,6 +2182,8 @@ const App = () => {
       setGameRunning(false);
       setScreen('game');
       setBalloons([]);
+      confettiTimeoutsRef.current.forEach(t => clearTimeout(t));
+      confettiTimeoutsRef.current.clear();
       setConfettiBursts([]);
       setScorePopups([]);
       setPaused(false);
@@ -2218,19 +2273,6 @@ const App = () => {
       if (!gameRunningRef.current || pausedRef.current) return;
       if (isMultiplayer && poppedByRemoteRef.current.has(balloon.id)) {
         poppedByRemoteRef.current.delete(balloon.id);
-        return;
-      }
-
-      if (balloon.specialType === 'giant' && balloon.tapsLeft > 1) {
-        setBalloons(prev => prev.map(b =>
-          b.id === balloon.id ? {...b, tapsLeft: b.tapsLeft - 1, face: '😵'} : b,
-        ));
-        playPopSound();
-        if (vibrationOn) try { Vibration.vibrate(20); } catch (e) {}
-        Animated.sequence([
-          Animated.timing(balloon.scaleAnim, {toValue: 1.3, duration: 80, useNativeDriver: true}),
-          Animated.timing(balloon.scaleAnim, {toValue: 1, duration: 100, useNativeDriver: true}),
-        ]).start();
         return;
       }
 
@@ -2382,15 +2424,10 @@ const App = () => {
     setPaused(p => {
       const next = !p;
       pausedRef.current = next;
-      if (
-        musicOnRef.current &&
-        activeMusicTrackRef.current === 'game' &&
-        homeMusicRef.current?.isLoaded()
-      ) {
-        const target = next ? 0.1 : MUSIC_VOLUME.gameplay;
-        fadeSoundVolume(homeMusicRef.current, homeVolumeRef.current, target, 280, () => {
-          homeVolumeRef.current = target;
-        });
+      if (next && Platform.OS === 'ios') {
+        confettiTimeoutsRef.current.forEach(t => clearTimeout(t));
+        confettiTimeoutsRef.current.clear();
+        setConfettiBursts([]);
       }
       return next;
     });
@@ -3298,13 +3335,7 @@ const App = () => {
             <View style={styles.sbTopBar}>
               <TouchableOpacity
                 activeOpacity={0.75}
-                onPress={() => {
-                  gameRunningRef.current = false;
-                  setGameRunning(false);
-                  if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
-                  if (isMultiplayer) cleanupNetwork();
-                  setScreen('home');
-                }}
+                onPress={quitToHome}
                 style={styles.sbCloseBtn}>
                 <Text style={styles.sbCloseIcon}>✕</Text>
               </TouchableOpacity>
@@ -3324,9 +3355,6 @@ const App = () => {
                 </Animated.View>
               )}
               <View style={{flexDirection: 'row', marginLeft: 'auto', gap: 6}}>
-                <TouchableOpacity activeOpacity={0.7} onPress={() => { setSoundOn(p => { const n = !p; saveSettings({soundOn: n, musicOn, vibrationOn, splashThemeId}); return n; }); }} style={styles.sbSmallBtn}>
-                  <Text style={styles.sbSmallBtnText}>{soundOn ? '🔊' : '🔇'}</Text>
-                </TouchableOpacity>
                 <TouchableOpacity activeOpacity={0.7} onPress={togglePause} style={styles.sbSmallBtn}>
                   <Text style={styles.sbSmallBtnText}>{paused ? '▶' : '⏸'}</Text>
                 </TouchableOpacity>
@@ -3476,10 +3504,13 @@ const App = () => {
           return (
             <Animated.View
               key={balloon.id}
+              pointerEvents="box-none"
               style={[
                 styles.balloonWrapper,
                 {
                   left: balloon.x,
+                  zIndex: balloon.id,
+                  elevation: balloon.id,
                   transform: [
                     {translateY: balloon.animValue},
                     {rotate: balloon.wobble.interpolate({
@@ -3490,67 +3521,67 @@ const App = () => {
                   ],
                 },
               ]}>
-              {showThemeRing && (
+              <Pressable
+                onPress={() => popBalloon(balloon)}
+                hitSlop={BALLOON_HIT_SLOP}
+                style={styles.balloonPressTarget}
+                android_ripple={{color: 'rgba(255,255,255,0.2)', borderless: true}}>
+                {showThemeRing && (
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      styles.balloonThemeRing,
+                      scaledShape,
+                      {
+                        borderColor: balloon.ringColor,
+                        shadowColor: balloon.ringColor,
+                      },
+                      isTrap && styles.balloonThemeRingTrap,
+                    ]}
+                  />
+                )}
                 <View
                   style={[
-                    styles.balloonThemeRing,
+                    styles.balloon,
+                    {backgroundColor: balloon.color},
                     scaledShape,
-                    {
-                      borderColor: balloon.ringColor,
-                      shadowColor: balloon.ringColor,
-                    },
-                    isTrap && styles.balloonThemeRingTrap,
+                    isGolden && styles.balloonGolden,
+                    isBomb && styles.balloonBomb,
+                    isDevil && styles.balloonDevil,
+                    isFrozen && styles.balloonFrozen,
+                    isGhost && styles.balloonGhost,
+                  ]}>
+                  <View pointerEvents="none" style={[styles.balloonShine, isGhost && styles.balloonShineGhost]} />
+                  <View pointerEvents="none" style={styles.balloonBadge}>
+                    <Text style={styles.balloonBadgeText}>{balloon.themeBadge}</Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.balloonFace,
+                      sm !== 1 && {fontSize: 24 * sm},
+                      currentLevel.id >= 6 && styles.balloonFaceHero,
+                      isTrap && styles.balloonFaceTrap,
+                    ]}>
+                    {balloon.face}
+                  </Text>
+                  {isTrap && (
+                    <View pointerEvents="none" style={styles.trapLabel}>
+                      <Text style={styles.trapLabelText}>
+                        {isDevil ? 'DEVIL' : isGhost ? 'TRAP' : 'BOOM'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <View pointerEvents="none" style={[styles.balloonKnot, {backgroundColor: balloon.color}]} />
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.balloonString,
+                    {backgroundColor: balloon.color},
+                    currentLevel.id >= 6 && styles.balloonStringBold,
                   ]}
                 />
-              )}
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => popBalloon(balloon)}
-                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-                pressRetentionOffset={{top: 12, bottom: 12, left: 12, right: 12}}
-                delayPressIn={0}
-                style={[
-                  styles.balloon,
-                  {backgroundColor: balloon.color},
-                  scaledShape,
-                  isGolden && styles.balloonGolden,
-                  isBomb && styles.balloonBomb,
-                  isDevil && styles.balloonDevil,
-                  isFrozen && styles.balloonFrozen,
-                  isGhost && styles.balloonGhost,
-                ]}>
-                <View style={[styles.balloonShine, isGhost && styles.balloonShineGhost]} />
-                <View style={styles.balloonBadge}>
-                  <Text style={styles.balloonBadgeText}>{balloon.themeBadge}</Text>
-                </View>
-                <Text
-                  style={[
-                    styles.balloonFace,
-                    sm !== 1 && {fontSize: 24 * sm},
-                    currentLevel.id >= 6 && styles.balloonFaceHero,
-                    isTrap && styles.balloonFaceTrap,
-                  ]}>
-                  {balloon.face}
-                </Text>
-                {isTrap && (
-                  <View style={styles.trapLabel}>
-                    <Text style={styles.trapLabelText}>
-                      {isDevil ? 'DEVIL' : isGhost ? 'TRAP' : 'BOOM'}
-                    </Text>
-                  </View>
-                )}
-                {balloon.specialType === 'giant' && balloon.tapsLeft > 1 && (
-                  <View style={styles.tapBadge}><Text style={styles.tapBadgeText}>{balloon.tapsLeft}</Text></View>
-                )}
-              </TouchableOpacity>
-              <View style={[styles.balloonKnot, {backgroundColor: balloon.color}]} />
-              <View
-                style={[
-                  styles.balloonString,
-                  {backgroundColor: balloon.color},
-                  currentLevel.id >= 6 && styles.balloonStringBold,
-                ]}
-              />
+              </Pressable>
             </Animated.View>
           );
         })}
@@ -3615,13 +3646,7 @@ const App = () => {
                 <Text style={styles.pauseBtnText}>🔄 Restart</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.pauseBtnOutline} activeOpacity={0.7}
-                onPress={() => {
-                  gameRunningRef.current = false; setGameRunning(false); setPaused(false); pausedRef.current = false;
-                  if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
-                  if (timerRef.current) clearInterval(timerRef.current);
-                  if (isMultiplayer) cleanupNetwork();
-                  setScreen('home');
-                }}>
+                onPress={quitToHome}>
                 <Text style={styles.pauseBtnOutlineText}>🏠 Quit</Text>
               </TouchableOpacity>
             </View>
@@ -3733,7 +3758,13 @@ const App = () => {
 
             <View style={styles.settingsGroup}>
               <TouchableOpacity style={styles.settingsRow} activeOpacity={0.7}
-                onPress={() => { const n = !soundOn; setSoundOn(n); saveSettings({soundOn: n, musicOn, vibrationOn, splashThemeId}); }}>
+                onPress={() => {
+                  const n = !soundOn;
+                  soundOnRef.current = n;
+                  setSoundOn(n);
+                  if (!n) stopAllSoundEffects();
+                  saveSettings({soundOn: n, musicOn, vibrationOn, splashThemeId});
+                }}>
                 <Text style={styles.settingsLabel}>🔊 Sound Effects</Text>
                 <View style={[styles.settingsToggle, soundOn && styles.settingsToggleOn]}>
                   <Text style={styles.settingsToggleText}>{soundOn ? 'ON' : 'OFF'}</Text>
@@ -5249,6 +5280,9 @@ const styles = StyleSheet.create({
   balloonWrapper: {
     position: 'absolute',
     width: BALLOON_WIDTH,
+    alignItems: 'center',
+  },
+  balloonPressTarget: {
     alignItems: 'center',
   },
   balloon: {
