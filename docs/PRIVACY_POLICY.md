@@ -27,6 +27,9 @@ See the full formatted version: [privacy-policy.html](./privacy-policy.html)
 3. Your URLs will be like:
    - Privacy: `https://YOUR_USERNAME.github.io/YOUR_REPO/privacy-policy.html`
    - Support: `https://YOUR_USERNAME.github.io/YOUR_REPO/support.html`
+   - AdMob app-ads.txt: `https://YOUR_USERNAME.github.io/YOUR_REPO/app-ads.txt` (see [ADMOB_APP_ADS_TXT.md](./ADMOB_APP_ADS_TXT.md))
+
+**HelioPop (live):** https://krishnan90kannan-bit.github.io/HelioPop/app-ads.txt
 
 ### Option B — Google Sites / Notion / your website
 
